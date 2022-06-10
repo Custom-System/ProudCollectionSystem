@@ -10,13 +10,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/consumer")
 public class ConsumerController extends ControllerBasic {
 
-    @RequestMapping(
-            value = "/sign/up" ,
-            method = RequestMethod.POST) protected String signUp(
+    @RequestMapping(value = "/sign/up" , method = RequestMethod.POST)
+    protected String signUp(
             @RequestParam("mobile") String mobile,
             @RequestParam("password") String password,
             @RequestParam("code") String code) {
 
         return "register consumer success";
+    }
+
+    @RequestMapping(value = "/sign/in", method = RequestMethod.POST)
+    protected String signIn(
+            @RequestParam("account") String account,
+            @RequestParam("password") String password) {
+
+        return "consumer login success";
     }
 }
