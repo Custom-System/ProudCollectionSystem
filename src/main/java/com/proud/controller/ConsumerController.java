@@ -12,8 +12,7 @@ public class ConsumerController extends ControllerBasic {
 
     @RequestMapping(
             value = "/sign/up" ,
-            method = RequestMethod.POST,
-            params = { "mobile", "password", "verificationCode"}) protected String signUp(
+            method = RequestMethod.POST) protected String signUp(
             @RequestParam("mobile") String mobile,
             @RequestParam("password") String password,
             @RequestParam("code") String code) {
