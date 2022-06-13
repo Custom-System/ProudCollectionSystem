@@ -2,6 +2,7 @@ package com.proud.controller;
 
 import com.proud.basic.ControllerBasic;
 import com.proud.entity.ConsumerEntity;
+import com.proud.exception.ConsumerException;
 import com.proud.service.ConsumerService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,15 +22,12 @@ public class ConsumerController extends ControllerBasic {
     }
 
     @RequestMapping(value = "/sign/up" , method = RequestMethod.GET)
-    protected String signUp(
+    protected ConsumerEntity signUp(
             @RequestParam("mobile") String mobile,
             @RequestParam("password") String password,
-            @RequestParam("code") String code) throws IOException {
+            @RequestParam("code") String code) throws ConsumerException {
 
-        ConsumerEntity consumerEntity = new ConsumerEntity();
-        consumerService.save(consumerEntity);
-
-        return consumerEntity.toString();
+        return consumerService.signUp(code, mobile, password);
     }
 
     @RequestMapping(value = "/sign/in", method = RequestMethod.POST)
