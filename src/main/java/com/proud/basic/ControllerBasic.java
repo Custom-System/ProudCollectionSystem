@@ -1,4 +1,4 @@
 package com.proud.basic;
 
-public class ControllerBasic {
+public abstract class ControllerBasic {
 }
