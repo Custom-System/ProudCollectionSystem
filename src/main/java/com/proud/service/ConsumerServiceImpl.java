@@ -81,7 +81,7 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
         save(consumer);
 
         QueryWrapper<ConsumerEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.ge("mobile_number", mobileNumber);
+        queryWrapper.eq("mobile_number", mobileNumber);
 
         return WebResponse.success(baseMapper.selectOne(queryWrapper));
     }
@@ -100,8 +100,7 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
     public WebResponse signInWithMobileNumberPassword(String mobileNumber, String password) {
 
         QueryWrapper<ConsumerEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.ge("mobile_number", mobileNumber).ge("password", ConsumerServiceImpl.encryptPassword(password));
-
+        queryWrapper.eq("mobile_number", mobileNumber).eq("password", ConsumerServiceImpl.encryptPassword(password));
         ConsumerEntity consumer = baseMapper.selectOne(queryWrapper);
         if (consumer == null) {
             return WebResponse.failed(404, "consumer not existed or mobile number and password error");
