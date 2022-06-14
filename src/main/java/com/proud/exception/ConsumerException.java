@@ -6,11 +6,15 @@ public class ConsumerException extends Exception {
         super(msg);
     }
 
-    public static ConsumerException IllegalMobileNumber(String mobileCode, String mobileNumber) {
+    public static ConsumerException illegalMobileNumber(String mobileCode, String mobileNumber) {
        return new ConsumerException("IllegalMobile: " + mobileCode + " " + mobileNumber);
     }
 
-    public static ConsumerException IllegalPassword() {
+    public static ConsumerException illegalPassword() {
         return new ConsumerException("The login password is invalid");
+    }
+
+    public static ConsumerException verificationCodeError() {
+        return new ConsumerException("Verification code error");
     }
 }

@@ -6,13 +6,20 @@ import com.proud.exception.ConsumerException;
 
 public interface ConsumerService extends IService<ConsumerEntity> {
 
+
+    /**
+     * @param mobileCode 手机号国家代码
+     * @param mobileNumber 手机号码
+     */
+    public void sendMobileNumberSignUpVerificationCode(String mobileCode, String mobileNumber) throws ConsumerException;
+
     /**
      * @param mobileCode 手机号国家代码
      * @param mobileNumber 手机号码
      * @param password 登录密码
      * @return 注册成功的用户信息
      */
-    public ConsumerEntity signUp(String mobileCode, String mobileNumber, String password) throws ConsumerException;
+    public ConsumerEntity signUp(String mobileCode, String mobileNumber, String password, String verificationCode) throws ConsumerException;
 
     /**
      * @param email 邮箱

@@ -4,31 +4,71 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.proud.dao.ConsumerDao;
 import com.proud.entity.ConsumerEntity;
 import com.proud.exception.ConsumerException;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
 public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity> implements ConsumerService {
+
+    private static final String REDIS_KEY_FORMAT = "VERIFICATION_CODE";
+
+    private final JedisPool jedisPool;
+
+    public ConsumerServiceImpl(JedisPool jedisPool) {
+        this.jedisPool = jedisPool;
+    }
+
     @Override
-    public ConsumerEntity signUp(String mobileCode, String mobileNumber, String password) throws ConsumerException {
+    public void sendMobileNumberSignUpVerificationCode(String mobileCode, String mobileNumber) throws ConsumerException {
         if (!MobileRegularExp.isMobileNumber(mobileCode, mobileNumber)) {
-            throw ConsumerException.IllegalMobileNumber(mobileCode, mobileNumber);
+            throw ConsumerException.illegalMobileNumber(mobileCode, mobileNumber);
+        }
+        Jedis jedis = jedisPool.getResource();
+        String key = REDIS_KEY_FORMAT + ":" + mobileCode + mobileNumber;
+        String code = jedis.get(key);
+        if (code == null || code.length() == 0) {
+            jedis.set(key, ConsumerServiceImpl.generateVerificationCode(999999));
+        }
+
+        // TODO: 短信运营商调用
+        log.debug("Send sms code: " + code + " to " + mobileCode + " " + mobileNumber);
+    }
+
+    @Override
+    public ConsumerEntity signUp(String mobileCode, String mobileNumber, String password, String verificationCode) throws ConsumerException {
+        if (!MobileRegularExp.isMobileNumber(mobileCode, mobileNumber)) {
+            throw ConsumerException.illegalMobileNumber(mobileCode, mobileNumber);
         }
 
         String patternStr ="^(?![A-Za-z\\d]+$)(?![a-z\\d#?!@$%^&*-.]+$)(?![A-Za-z#?!@$%^&*-.]+$)(?![A-Z\\d#?!@$%^&*-.]+$)[a-zA-Z\\d#?!@$%^&*-.]{8,16}$";
         Pattern pattern = Pattern.compile(patternStr);
         Matcher matcher = pattern.matcher(password);
         if (matcher.matches()) {
-            throw ConsumerException.IllegalPassword();
+            throw ConsumerException.illegalPassword();
         }
 
-        // TODO : 应该加上手机号短信验证码验证及登录密码加密
+        Jedis jedis = jedisPool.getResource();
+        String key = REDIS_KEY_FORMAT + ":" + mobileCode + mobileNumber;
+        String code = jedis.get(key);
+        if (code == null || code.length() == 0 || !code.equals(verificationCode)) {
+            throw ConsumerException.verificationCodeError();
+        }
+
         ConsumerEntity consumer = new ConsumerEntity();
         consumer.setMobileCode(mobileCode);
         consumer.setMobileNumber(mobileNumber);
-        consumer.setPassword(password);
+        consumer.setPassword(ConsumerServiceImpl.encryptPassword(password));
         consumer.setNickname(mobileNumber);
         this.save(consumer);
 
@@ -53,6 +93,44 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
     @Override
     public ConsumerEntity signInWithMobileVerificationCode(String mobileCode, String mobileNumber, String verificationCode) throws ConsumerException {
        return null;
+    }
+
+
+    /**
+     * @param bound 验证码极限值
+     * @return 长度等同于bound的字符串格式的随机验证码
+     */
+    public static String generateVerificationCode(int bound) {
+        Random rand = new Random();
+        int number = rand.nextInt(bound);
+        return String.format("%0" + (bound + "").length() + "d", number);
+    }
+
+    /**
+     * @param password 需要加密的密码
+     * @return 加密后的字符串
+     */
+    public static String encryptPassword(String password) {
+        MessageDigest messageDigest;
+        String encodeStr = "";
+        try {
+            messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(("SALT:22611143" + password).getBytes(StandardCharsets.UTF_8));
+            StringBuilder stringBuilder = new StringBuilder();
+            String temp;
+            for (byte aByte : messageDigest.digest()) {
+                temp = Integer.toHexString(aByte & 0xFF);
+                if (temp.length() == 1) {
+                    //1得到一位的进行补0操作
+                    stringBuilder.append("0");
+                }
+                stringBuilder.append(temp);
+            }
+            encodeStr =  stringBuilder.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return encodeStr;
     }
 
     public enum MobileRegularExp {
