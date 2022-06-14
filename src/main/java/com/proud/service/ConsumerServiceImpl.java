@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity> implements ConsumerService {
+    private static final long SIGN_UP_VERIFICATION_CODE_EXPIRE_TIME = 15 * 60;
 
     private static final String REDIS_KEY_FORMAT = "VERIFICATION_CODE";
 
@@ -33,9 +34,13 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
         }
         Jedis jedis = jedisPool.getResource();
         String key = REDIS_KEY_FORMAT + ":" + mobileCode + mobileNumber;
+        if (jedis.exists(key + ":SEND")) {
+            throw ConsumerException.verificationCodeSendingFrequent();
+        }
         String code = jedis.get(key);
         if (code == null || code.length() == 0) {
-            jedis.set(key, ConsumerServiceImpl.generateVerificationCode(999999));
+            jedis.setex(key + ":SEND", Long.valueOf(60), "1");
+            jedis.setex(key, SIGN_UP_VERIFICATION_CODE_EXPIRE_TIME, ConsumerServiceImpl.generateVerificationCode(999999));
         }
 
         // TODO: 短信运营商调用
@@ -61,6 +66,7 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
         if (code == null || code.length() == 0 || !code.equals(verificationCode)) {
             throw ConsumerException.verificationCodeError();
         }
+        jedis.del(key, key + ":SEND");
 
         ConsumerEntity consumer = new ConsumerEntity();
         consumer.setMobileCode(mobileCode);

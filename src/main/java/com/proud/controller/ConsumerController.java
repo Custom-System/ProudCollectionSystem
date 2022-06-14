@@ -24,13 +24,22 @@ public class ConsumerController extends ControllerBasic {
         this.consumerService = consumerService;
     }
 
+    @RequestMapping(value = "/sign/up/sms", method = RequestMethod.GET)
+    protected void signUpSms(
+            @RequestParam("mCode") String mobileCode,
+            @RequestParam("mNumber") String mobileNumber) throws ConsumerException {
+
+        consumerService.sendMobileNumberSignUpVerificationCode(mobileCode, mobileNumber);
+    }
+
     @RequestMapping(value = "/sign/up" , method = RequestMethod.GET)
     protected ConsumerEntity signUp(
-            @RequestParam("mobile") String mobile,
-            @RequestParam("password") String password,
-            @RequestParam("code") String code) throws ConsumerException {
+            @RequestParam("mCode") String mobileCode,
+            @RequestParam("mNumber") String mobileNumber,
+            @RequestParam("pwd") String password,
+            @RequestParam("smsCode") String verificationCode) throws ConsumerException {
 
-        return consumerService.signUp(code, mobile, password);
+        return consumerService.signUp(mobileCode, mobileNumber, password, verificationCode);
     }
 
     @RequestMapping(value = "/sign/in", method = RequestMethod.POST)

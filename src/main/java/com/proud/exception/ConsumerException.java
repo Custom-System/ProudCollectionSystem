@@ -17,4 +17,8 @@ public class ConsumerException extends Exception {
     public static ConsumerException verificationCodeError() {
         return new ConsumerException("Verification code error");
     }
+
+    public static ConsumerException verificationCodeSendingFrequent() {
+        return new ConsumerException("Verification code sending frequent");
+    }
 }
