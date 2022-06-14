@@ -40,11 +40,12 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
         String code = jedis.get(key);
         if (code == null || code.length() == 0) {
             jedis.setex(key + ":SEND", Long.valueOf(60), "1");
-            jedis.setex(key, SIGN_UP_VERIFICATION_CODE_EXPIRE_TIME, ConsumerServiceImpl.generateVerificationCode(999999));
+            code = ConsumerServiceImpl.generateVerificationCode(999999);
+            jedis.setex(key, SIGN_UP_VERIFICATION_CODE_EXPIRE_TIME, code);
         }
 
         // TODO: 短信运营商调用
-        log.debug("Send sms code: " + code + " to " + mobileCode + " " + mobileNumber);
+        System.out.println("Send sms code: " + code + " to " + mobileCode + " " + mobileNumber);
     }
 
     @Override
