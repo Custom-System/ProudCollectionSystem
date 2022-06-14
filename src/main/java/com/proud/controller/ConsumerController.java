@@ -3,6 +3,7 @@ package com.proud.controller;
 import com.proud.basic.ControllerBasic;
 import com.proud.entity.ConsumerEntity;
 import com.proud.exception.ConsumerException;
+import com.proud.pkg.server.WebResponse;
 import com.proud.service.ConsumerService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,15 +21,15 @@ public class ConsumerController extends ControllerBasic {
     }
 
     @RequestMapping(value = "/sign/up/sms", method = RequestMethod.GET)
-    protected void signUpSms(
+    protected WebResponse signUpSms(
             @RequestParam("mCode") String mobileCode,
             @RequestParam("mNumber") String mobileNumber) throws ConsumerException {
 
-        consumerService.sendMobileNumberSignUpVerificationCode(mobileCode, mobileNumber);
+        return consumerService.sendMobileNumberSignUpVerificationCode(mobileCode, mobileNumber);
     }
 
     @RequestMapping(value = "/sign/up" , method = RequestMethod.GET)
-    protected ConsumerEntity signUp(
+    protected WebResponse signUp(
             @RequestParam("mCode") String mobileCode,
             @RequestParam("mNumber") String mobileNumber,
             @RequestParam("pwd") String password,
@@ -37,11 +38,11 @@ public class ConsumerController extends ControllerBasic {
         return consumerService.signUp(mobileCode, mobileNumber, password, verificationCode);
     }
 
-    @RequestMapping(value = "/sign/in", method = RequestMethod.POST)
-    protected String signIn(
-            @RequestParam("account") String account,
+    @RequestMapping(value = "/sign/in/mobile/password", method = RequestMethod.POST)
+    protected WebResponse signIn(
+            @RequestParam("mNumber") String mobileNumber,
             @RequestParam("password") String password) {
 
-        return "consumer login success";
+        return consumerService.signInWithMobileNumberPassword(mobileNumber, password);
     }
 }

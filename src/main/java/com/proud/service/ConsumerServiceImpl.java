@@ -1,9 +1,11 @@
 package com.proud.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.proud.dao.ConsumerDao;
 import com.proud.entity.ConsumerEntity;
 import com.proud.exception.ConsumerException;
+import com.proud.pkg.server.WebResponse;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -28,7 +30,7 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
     }
 
     @Override
-    public void sendMobileNumberSignUpVerificationCode(String mobileCode, String mobileNumber) throws ConsumerException {
+    public WebResponse sendMobileNumberSignUpVerificationCode(String mobileCode, String mobileNumber) throws ConsumerException {
         if (!MobileRegularExp.isMobileNumber(mobileCode, mobileNumber)) {
             throw ConsumerException.illegalMobileNumber(mobileCode, mobileNumber);
         }
@@ -46,10 +48,12 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
 
         // TODO: 短信运营商调用
         System.out.println("Send sms code: " + code + " to " + mobileCode + " " + mobileNumber);
+
+        return WebResponse.success();
     }
 
     @Override
-    public ConsumerEntity signUp(String mobileCode, String mobileNumber, String password, String verificationCode) throws ConsumerException {
+    public WebResponse signUp(String mobileCode, String mobileNumber, String password, String verificationCode) throws ConsumerException {
         if (!MobileRegularExp.isMobileNumber(mobileCode, mobileNumber)) {
             throw ConsumerException.illegalMobileNumber(mobileCode, mobileNumber);
         }
@@ -74,28 +78,40 @@ public class ConsumerServiceImpl extends ServiceImpl<ConsumerDao, ConsumerEntity
         consumer.setMobileNumber(mobileNumber);
         consumer.setPassword(ConsumerServiceImpl.encryptPassword(password));
         consumer.setNickname(mobileNumber);
-        this.save(consumer);
+        save(consumer);
 
-        return consumer;
+        QueryWrapper<ConsumerEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ge("mobile_number", mobileNumber);
+
+        return WebResponse.success(baseMapper.selectOne(queryWrapper));
     }
 
     @Override
-    public ConsumerEntity signInWithEmail(String email, String password) {
+    public WebResponse signInWithEmail(String email, String password) {
         return null;
     }
 
     @Override
-    public ConsumerEntity signInWithEmailVerificationCode(String email, String verificationCode) {
+    public WebResponse signInWithEmailVerificationCode(String email, String verificationCode) {
         return null;
     }
 
     @Override
-    public ConsumerEntity signInWithMobileNumberPassword(String mobileNumber, String password) {
-        return null;
+    public WebResponse signInWithMobileNumberPassword(String mobileNumber, String password) {
+
+        QueryWrapper<ConsumerEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ge("mobile_number", mobileNumber).ge("password", ConsumerServiceImpl.encryptPassword(password));
+
+        ConsumerEntity consumer = baseMapper.selectOne(queryWrapper);
+        if (consumer == null) {
+            return WebResponse.failed(404, "consumer not existed or mobile number and password error");
+        }
+
+        return WebResponse.success(consumer);
     }
 
     @Override
-    public ConsumerEntity signInWithMobileVerificationCode(String mobileCode, String mobileNumber, String verificationCode) throws ConsumerException {
+    public WebResponse signInWithMobileVerificationCode(String mobileCode, String mobileNumber, String verificationCode) throws ConsumerException {
        return null;
     }
 
