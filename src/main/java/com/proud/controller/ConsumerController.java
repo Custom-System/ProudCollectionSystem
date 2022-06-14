@@ -1,7 +1,6 @@
 package com.proud.controller;
 
 import com.proud.basic.ControllerBasic;
-import com.proud.entity.ConsumerEntity;
 import com.proud.exception.ConsumerException;
 import com.proud.pkg.server.WebResponse;
 import com.proud.service.ConsumerService;
