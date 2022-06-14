@@ -1,6 +1,7 @@
 package com.proud.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.proud.basic.EntityBasic;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,5 +19,6 @@ public class ConsumerEntity extends EntityBasic {
 
     private String nickname;
 
+    @JsonIgnore
     private String password;
 }

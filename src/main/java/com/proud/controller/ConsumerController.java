@@ -28,7 +28,7 @@ public class ConsumerController extends ControllerBasic {
         return consumerService.sendMobileNumberSignUpVerificationCode(mobileCode, mobileNumber);
     }
 
-    @RequestMapping(value = "/sign/up" , method = RequestMethod.GET)
+    @RequestMapping(value = "/sign/up" , method = RequestMethod.POST)
     protected WebResponse signUp(
             @RequestParam("mCode") String mobileCode,
             @RequestParam("mNumber") String mobileNumber,
